@@ -242,15 +242,6 @@ class DestBoardTable:
             cell = self.__get_cell(0, c)
             last_cell = self.__get_cell(self.rows - 1, c)
             self.draw.line((cell.name_x2, cell.name_y1, last_cell.name_x2, last_cell.y2), fill=0, width=2)
-        """
-        Get all cells in the table.
-
-        Returns
-        -------
-        List[List[DestBoardCell]]
-            Cells object.
-        """
-        return self.__cells
 
     def __get_cell(self, x: int, y:int) -> DestBoardCell:
         """
