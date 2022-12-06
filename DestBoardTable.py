@@ -12,6 +12,7 @@ class DestBoardTable:
         """
         __name = ''
         __status = ''
+        __present = False
 
         def __init__(self, outer: 'DestBoardTable', x1: int, y1: int, x2: int, y2: int, padding_left: int, padding_top: int, cell_name_ratio: float) -> None:
             """
@@ -67,7 +68,12 @@ class DestBoardTable:
                 name
             """
             self.__name = text
-            self.__outer.draw.text((self.name_x1 + self.padding_left, self.name_y1 + self.padding_top), text, font=self.__outer.font, fill=0)
+            if self.__present:
+                self.__outer.draw.rectangle((self.name_x1 + 1, self.name_y1 + 2, self.name_x2 - 1, self.name_y2 - 1), fill=255)
+                self.__outer.draw.text((self.name_x1 + self.padding_left, self.name_y1 + self.padding_top), text, font=self.__outer.font, fill=0)
+            else:
+                self.__outer.draw.rectangle((self.name_x1 + 1, self.name_y1 + 2, self.name_x2 - 1, self.name_y2 - 1), fill=0)
+                self.__outer.draw.text((self.name_x1 + self.padding_left, self.name_y1 + self.padding_top), text, font=self.__outer.font, fill=255)
 
         def set_status(self, text: str) -> None:
             """
@@ -80,6 +86,18 @@ class DestBoardTable:
             """
             self.__status = text
             self.__outer.draw.text((self.status_x1 + self.padding_left, self.status_y1 + self.padding_top), text, font=self.__outer.font, fill=0)
+
+        def set_present(self, value: bool) -> None:
+            """
+            Set present.
+
+            Parameters
+            ----------
+            value : bool
+                present
+            """
+            self.__present = value
+            self.set_name(self.__name)
 
         def get_name(self) -> str:
             """
@@ -102,6 +120,17 @@ class DestBoardTable:
                 status
             """
             return self.__status
+        
+        def get_present(self) -> bool:
+            """
+            Get present.
+
+            Returns
+            -------
+            bool
+                present
+            """
+            return self.__present
 
 
     __cells: List[List[DestBoardCell]] = []
@@ -290,6 +319,21 @@ class DestBoardTable:
             status
         """
         self.__get_cell(x, y).set_status(text)
+    
+    def set_present(self, x: int, y: int, value: bool) -> None:
+        """
+        Set present.
+
+        Parameters
+        ----------
+        x : int
+            index of X.
+        y : int
+            index of Y.
+        value : bool
+            present
+        """
+        self.__get_cell(x, y).set_present(value)
 
     def get_name(self, x: int, y: int) -> str:
         """
@@ -326,3 +370,21 @@ class DestBoardTable:
             status
         """
         return self.__get_cell(x, y).get_status()
+
+    def get_present(self, x: int, y: int) -> bool:
+        """
+        Get present.
+
+        Parameters
+        ----------
+        x : int
+            index of X.
+        y : int
+            index of Y.
+
+        Returns
+        -------
+        bool
+            present
+        """
+        return self.__get_cell(x, y).get_present()

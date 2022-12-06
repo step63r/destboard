@@ -1,94 +1,96 @@
-import argparse
-import logging
-import time
+import uvicorn
 
-from typing import Any
+from fastapi import FastAPI
+from pydantic import BaseModel, BaseSettings
+from typing import Any, Dict, Union
+
 from lib.waveshare_epd import epd7in5_V2
 from DestBoardTable import DestBoardTable
 
 
-logging.basicConfig(level=logging.INFO)
-
-
-def main(args: Any) -> None:
+class Settings(BaseSettings):
     """
-    Main method.
+    Settings format.
 
     Parameters
     ----------
-    args : Any
-        Command line arguments.
+    BaseSettings : BaseSettings
+        pydantic model class
     """
-    logging.info('----- start -----')
-    try:
-        table_row: int = args.tr
-        table_column: int = args.tc
-        margin_width: int = args.mw
-        margin_height: int = args.mh
-        padding_left: int = args.pl
-        padding_top: int = args.pt
-        cell_name_ratio: float = args.cnr
+    table_row: int = 6
+    table_column: int = 2
+    margin_width: int = 5
+    margin_height: int = 5
+    padding_left: int = 5
+    padding_top: int = 5
+    cell_name_ratio: float = 0.3
 
-        epd = epd7in5_V2.EPD()
-        # 7in5: 800 x 480
-        logging.info(f"(epd.width, epd.height) = ({epd.width}, {epd.height})")
+    class Config:
+        env_file = '.env', 'prod.env', 'stg.env', 'dev.env'
+        env_file_encoding = 'utf-8'
 
-        # generate Table instance
-        table = DestBoardTable(
-                epd.width, epd.height,
-                margin_width, margin_height,
-                padding_left, padding_top,
-                table_row, table_column, cell_name_ratio,
-                '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc', 36)
 
-        # get table info
-        logging.info(f"(width, height) = ({table.width}, {table.height})")
-        logging.info(f"(x1, y1, x2, y2) = ({table.x1}, {table.y1}, {table.x2}, {table.y2})")
+class PostItem(BaseModel):
+    """
+    HTTP PUT request body format.
 
-        logging.info('init and Clear')
-        epd.init()
-        epd.Clear()
+    Parameters
+    ----------
+    BaseModel : BaseModel
+        pydantic model class.
+    """
+    name: Union[str, None] = None
+    status: Union[str, None] = None
+    present: Union[bool, None] = None
 
-        table.set_name(0, 0, "小林")
-        table.set_status(0, 0, "12/31 AM休暇")
 
-        while True:
-            try:
-                epd.display(epd.getbuffer(table.Himage))
-                time.sleep(3600)
-                logging.info('Clear...')
-                epd.init()
-                epd.Clear()
+settings = Settings(_env_file='dev.env', _env_file_encoding='utf-8')
+app = FastAPI()
+epd = epd7in5_V2.EPD()
 
-            except KeyboardInterrupt:
-                raise
+table = DestBoardTable(
+        epd.width, epd.height,
+        settings.margin_width, settings.margin_height,
+        settings.padding_left, settings.padding_top,
+        settings.table_row, settings.table_column, settings.cell_name_ratio,
+        '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc', 36)
 
-    except IOError as e:
-        logging.info(e)
 
-    except KeyboardInterrupt:
-        logging.info('ctrl + c:')
-        epd7in5_V2.epdconfig.module_exit()
+@app.on_event("startup")
+async def startup_event():
+    epd.init()
+    epd.Clear()
+    epd.display(epd.getbuffer(table.Himage))
 
-        logging.info('Clear...')
-        epd.init()
-        epd.Clear()
 
-        logging.info('Goto Sleep...')
-        epd.sleep()
+@app.on_event("shutdown")
+async def shutdown_event():
+    epd.init()
+    epd.Clear()
+    epd.sleep()
 
-    logging.info('----- end -----')
+
+@app.post("/{row}/{column}")
+async def set(row: int, column: int, item: PostItem):
+    if not item.name is None:
+        table.set_name(column, row, item.name)
+    if not item.status is None:
+        table.set_status(column, row, item.status)
+    if not item.present is None:
+        table.set_present(column, row, item.present)
+    
+    epd.display(epd.getbuffer(table.Himage))
+    return {"status": "update success."}
+
+
+@app.get("/{row}/{column}")
+async def get(row: int, column: int) -> Dict[str, Any]:
+    return {
+        "name": table.get_name(column, row),
+        "status": table.get_status(column, row),
+        "present": table.get_present(column, row)}
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Electronic destination board for Waveshare e-Paper display.')
-    _ = parser.add_argument('--tr', metavar='TABLE_ROW', type=int, default=6, help='Number of table row, by default 6.')
-    _ = parser.add_argument('--tc', metavar='TABLE_COLUMN', type=int, default=2, help='Number of table column, by default 2.')
-    _ = parser.add_argument('--mw', metavar='MARGIN_WIDTH', type=int, default=5, help='Width margin size of table, by default 5.')
-    _ = parser.add_argument('--mh', metavar='MARGIN_HEIGHT', type=int, default=5, help='Height margin size of table, by default 5.')
-    _ = parser.add_argument('--pl', metavar='PADDING_LEFT', type=int, default=5, help='Left padding size of each cell, by default 5.')
-    _ = parser.add_argument('--pt', metavar='PADDINT_TOP', type=int, default=5, help='Height margin size of each cell, by default 5.')
-    _ = parser.add_argument('--cnr', metavar='CELL_NAME_RATIO', type=float, default=0.3, help='Width ratio of "name" column (0.1 to 0.9), by default 0.3.')
-    args = parser.parse_args()
-    main(args)
+    # start http server
+    uvicorn.run(app)

@@ -180,3 +180,6 @@ cython_debug/
 *.vsix
 
 
+dev.env
+stg.env
+prod.env
