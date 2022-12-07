@@ -12,19 +12,24 @@ Electronic destination board (行先表示板) for Waveshare e-Paper display.
 
 ## Usage
 
-Run script as below.
+Run script as below,
 
 ```
-$ python ./main.py
+$ uvicorn main:app --reload
 ```
 
-To get more informations, run with ``--help`` option.
+and send HTTP request like
 
 ```
-$ python ./main.py --help
+POST http://127.0.0.1:8000/0/0
+{
+  "name": "山田",
+  "status": "10/30 休暇",
+  "present": true
+}
 ```
 
-**PRESS Q TO QUIT.**
+**PRESS Ctrl+C TO QUIT.**
 
 ## Install
 
