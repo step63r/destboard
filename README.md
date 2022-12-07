@@ -29,6 +29,12 @@ POST http://127.0.0.1:8000/0/0
 }
 ```
 
+In detail, please refer to API docs.
+
+```
+http://127.0.0.1:8000/docs/
+```
+
 **PRESS Ctrl+C TO QUIT.**
 
 ## Install
