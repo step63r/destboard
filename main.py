@@ -53,7 +53,8 @@ table = DestBoardTable(
         settings.margin_width, settings.margin_height,
         settings.padding_left, settings.padding_top,
         settings.table_row, settings.table_column, settings.cell_name_ratio,
-        '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc', 36)
+        '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc', 36,
+        './table.json')
 
 
 @app.on_event("startup")

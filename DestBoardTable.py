@@ -1,3 +1,6 @@
+import json
+import pathlib
+
 from typing import List, Tuple
 from PIL import Image, ImageDraw, ImageFont
 
@@ -136,6 +139,9 @@ class DestBoardTable:
     __cells: List[List[DestBoardCell]] = []
     """cells in the table."""
 
+    __p_file: pathlib.Path = None
+    """path obect of dump file."""
+
     def __init__(
             self,
             epd_width: int, epd_height: int,
@@ -143,7 +149,8 @@ class DestBoardTable:
             padding_left: int, padding_top: int,
             rows: int, columns: int,
             cell_name_ratio: float,
-            font_path: str, font_size: int) -> None:
+            font_path: str, font_size: int,
+            file: str = '') -> None:
         """
         Constructor.
 
@@ -171,6 +178,8 @@ class DestBoardTable:
             Font file path.
         font_size: int
             Font size.
+        file: str
+            File path to dump table as pickle, by default empty.
         """
         self.epd_width = epd_width
         self.epd_height = epd_height
@@ -192,6 +201,13 @@ class DestBoardTable:
         self.draw = ImageDraw.Draw(self.Himage)
 
         self.__draw_lines()
+
+        if file:
+            self.__p_file = pathlib.Path(file)
+            if not self.__p_file.exists():
+                self.__p_file.parent.mkdir(parents=True, exist_ok=True)
+                self.__save(self.__p_file.absolute())
+            self.__load(self.__p_file.absolute())
 
     def __get_table_size(self) -> Tuple[int, int]:
         """
@@ -290,6 +306,47 @@ class DestBoardTable:
         """
         return self.__cells[y][x]
 
+    def __load(self, file: str) -> None:
+        """
+        Load table from json object.
+
+        Parameters
+        ----------
+        file : str
+            File path.
+        """
+        json_obj = []
+        with open(file, mode='r', encoding='utf-8') as f:
+            json_obj = json.load(f)
+        
+        for c in range(0, self.columns):
+            for r in range(0, self.rows):
+                self.__cells[c][r].set_name(json_obj[c][r]['name'])
+                self.__cells[c][r].set_status(json_obj[c][r]['status'])
+                self.__cells[c][r].set_present(json_obj[c][r]['present'])
+    
+    def __save(self, file: str) -> None:
+        """
+        Save table to json object.
+
+        Parameters
+        ----------
+        file : str
+            File path.
+        """
+        json_obj = []
+        for c in range(0, self.columns):
+            nested_obj = []
+            for r in range(0, self.rows):
+                nested_obj.append({
+                    'name': self.__cells[c][r].get_name(),
+                    'status': self.__cells[c][r].get_status(),
+                    'present': self.__cells[c][r].get_present()})
+            json_obj.append(nested_obj)
+        
+        with open(file, mode='w', encoding='utf-8') as f:
+            json.dump(json_obj, f, ensure_ascii=False, indent=2)
+
     def set_name(self, x: int, y: int, text: str) -> None:
         """
         Set name text.
@@ -304,6 +361,8 @@ class DestBoardTable:
             name
         """
         self.__get_cell(x, y).set_name(text)
+        if self.__p_file:
+            self.__save(self.__p_file.absolute())
 
     def set_status(self, x: int, y: int, text: str) -> None:
         """
@@ -319,6 +378,8 @@ class DestBoardTable:
             status
         """
         self.__get_cell(x, y).set_status(text)
+        if self.__p_file:
+            self.__save(self.__p_file.absolute())
     
     def set_present(self, x: int, y: int, value: bool) -> None:
         """
@@ -334,6 +395,8 @@ class DestBoardTable:
             present
         """
         self.__get_cell(x, y).set_present(value)
+        if self.__p_file:
+            self.__save(self.__p_file.absolute())
 
     def get_name(self, x: int, y: int) -> str:
         """
