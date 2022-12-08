@@ -1,8 +1,9 @@
 import uvicorn
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, BaseSettings
-from typing import Any, Dict, Union
+from typing import Any, Dict, List, Union
 
 from lib.waveshare_epd import epd7in5_V2
 from DestBoardTable import DestBoardTable
@@ -48,6 +49,19 @@ settings = Settings(_env_file='dev.env', _env_file_encoding='utf-8')
 app = FastAPI()
 epd = epd7in5_V2.EPD()
 
+# configure CORS.
+origins = [
+    "*",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["X-Requested-With", "X-HTTP-Method-Override", "Content-Type", "Accept"]
+)
+
 table = DestBoardTable(
         epd.width, epd.height,
         settings.margin_width, settings.margin_height,
@@ -91,6 +105,9 @@ async def get(row: int, column: int) -> Dict[str, Any]:
         "status": table.get_status(column, row),
         "present": table.get_present(column, row)}
 
+@app.get("/")
+async def root() -> List[List[Dict[str, Any]]]:
+    return table.get_all()
 
 if __name__ == '__main__':
     # start http server

@@ -1,7 +1,7 @@
 import json
 import pathlib
 
-from typing import List, Tuple
+from typing import Any, Dict, List, Tuple
 from PIL import Image, ImageDraw, ImageFont
 
 
@@ -346,6 +346,26 @@ class DestBoardTable:
         
         with open(file, mode='w', encoding='utf-8') as f:
             json.dump(json_obj, f, ensure_ascii=False, indent=2)
+    
+    def get_all(self) -> List[List[Dict[str, Any]]]:
+        """
+        Get all cells of the table as list.
+
+        Returns
+        -------
+        List[List[Dict[str, Any]]]
+            All cells.
+        """
+        obj = []
+        for c in range(0, self.columns):
+            nested_obj = []
+            for r in range(0, self.rows):
+                nested_obj.append({
+                    'name': self.__cells[c][r].get_name(),
+                    'status': self.__cells[c][r].get_status(),
+                    'present': self.__cells[c][r].get_present()})
+            obj.append(nested_obj)
+        return obj
 
     def set_name(self, x: int, y: int, text: str) -> None:
         """
