@@ -37,22 +37,10 @@ class EPD:
 
     def getbuffer(self, image):
         img = image
-        imwidth, imheight = img.size
-        if(imwidth == self.width and imheight == self.height):
-            img = img.convert('1')
-        elif(imwidth == self.height and imheight == self.width):
-            # image has correct dimensions, but needs to be rotated
-            img = img.rotate(90, expand=True).convert('1')
-        else:
-            logger.warning("Wrong image dimensions: must be " + str(self.width) + "x" + str(self.height))
-            # return a blank buffer
-            return [0x00] * (int(self.width/8) * self.height)
-
-        buf = bytearray(img.tobytes('raw'))
-        # The bytes need to be inverted, because in the PIL world 0=black and 1=white, but
-        # in the e-paper world 0=white and 1=black.
-        for i in range(len(buf)):
-            buf[i] ^= 0xFF
+        # 画像ファイルを保存する
+        img.save("epd_image.png")
+        # dummyではbufは使わない
+        buf = bytearray()
         return buf
 
     def display(self, image):
