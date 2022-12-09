@@ -88,6 +88,7 @@ class DestBoardTable:
                 status
             """
             self.__status = text
+            self.__outer.draw.rectangle((self.status_x1 + 1, self.status_y1 + 2, self.status_x2 - 1, self.status_y2 - 1), fill=255)
             self.__outer.draw.text((self.status_x1 + self.padding_left, self.status_y1 + self.padding_top), text, font=self.__outer.font, fill=0)
 
         def set_present(self, value: bool) -> None:
