@@ -1,0 +1,3 @@
+# requirements for development
+-r common.txt
+# この下に開発環境でしか使わないパッケージを列挙する
