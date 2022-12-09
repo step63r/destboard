@@ -185,3 +185,5 @@ stg.env
 prod.env
 
 table.json
+
+epd_image.png

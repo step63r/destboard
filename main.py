@@ -5,7 +5,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, BaseSettings
 from typing import Any, Dict, List, Union
 
-from lib.waveshare_epd import epd7in5_V2
+# from lib.waveshare_epd import epd7in5_V2
+import platform
+from importlib import import_module
+import re
+
 from DestBoardTable import DestBoardTable
 
 
@@ -25,6 +29,8 @@ class Settings(BaseSettings):
     padding_left: int = 5
     padding_top: int = 5
     cell_name_ratio: float = 0.3
+    font: str = "/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc"
+    font_size: int = 36
 
     class Config:
         env_file = '.env', 'prod.env', 'stg.env', 'dev.env'
@@ -47,7 +53,16 @@ class PostItem(BaseModel):
 
 settings = Settings(_env_file='dev.env', _env_file_encoding='utf-8')
 app = FastAPI()
-epd = epd7in5_V2.EPD()
+
+epd = None
+# Windows又はmacの場合
+if re.search("Windows|macOS", platform.platform()):
+    epdDummyModule = import_module("epd7in5_dummy")
+    epd = epdDummyModule.EPD()
+# その他Linux(RaspberryPi)の場合
+else:
+    epdModule = import_module(".epd7in5_V2", "lib.waveshare_epd")
+    epd = epdModule.EPD()
 
 # configure CORS.
 origins = [
@@ -67,7 +82,7 @@ table = DestBoardTable(
         settings.margin_width, settings.margin_height,
         settings.padding_left, settings.padding_top,
         settings.table_row, settings.table_column, settings.cell_name_ratio,
-        '/usr/share/fonts/opentype/noto/NotoSansCJK-Bold.ttc', 36,
+        settings.font, settings.font_size,
         './table.json')
 
 
