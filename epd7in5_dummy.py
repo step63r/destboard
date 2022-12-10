@@ -1,10 +1,10 @@
-import logging
+import subprocess
 
 # Display resolution
 EPD_WIDTH       = 800
 EPD_HEIGHT      = 480
 
-logger = logging.getLogger(__name__)
+EPD_IMAGE_PATH = 'epd_image.png'
 
 class EPD:
     """
@@ -13,6 +13,15 @@ class EPD:
     def __init__(self):
         self.width = EPD_WIDTH
         self.height = EPD_HEIGHT
+        # windowプロセスを起動する
+        self.winProc = subprocess.Popen(
+            ['python', 'epd7in5_window.py']
+            )
+
+    def __del__(self):
+        # windowプロセスを終了させる
+        if self.winProc.poll:
+            self.winProc.kill()
 
     def reset(self):
         pass
@@ -38,7 +47,7 @@ class EPD:
     def getbuffer(self, image):
         img = image
         # 画像ファイルを保存する
-        img.save("epd_image.png")
+        img.save(EPD_IMAGE_PATH)
         # dummyではbufは使わない
         buf = bytearray()
         return buf
