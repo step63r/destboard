@@ -1,3 +1,6 @@
 # requirements for development
 -r common.txt
 # この下に開発環境でしか使わないパッケージを列挙する
+PyQt6==6.4.0
+PyQt6-Qt6==6.4.1
+PyQt6-sip==13.4.0
