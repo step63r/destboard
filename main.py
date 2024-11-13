@@ -2,7 +2,8 @@ import uvicorn
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, BaseSettings
+from pydantic import BaseModel
+from pydantic_settings import BaseSettings
 from typing import Any, Dict, List, Union
 
 # from lib.waveshare_epd import epd7in5_V2

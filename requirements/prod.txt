@@ -1,5 +1,6 @@
 # requirements for production
 -r common.txt
 # この下に本番環境専用のパッケージを列挙する
+gpiozero==2.0.1
 RPi.GPIO==0.7.1
 spidev==3.6
